@@ -73,7 +73,6 @@ describe('instantiation', () => {
     expect(runner.action).toBe(Action.Initialize);
     expect(fs.existsSync(basePath)).toBe(false);
     await runner.run();
-    expect(runner.run()).resolves.toBeUndefined();
     expect(fs.existsSync(basePath)).toBe(true);
     expect(opts.reporter.initializeIntro).toBeCalled();
     expect(opts.reporter.initializeDone).toBeCalled();
