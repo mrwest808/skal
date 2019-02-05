@@ -1,0 +1,8 @@
+{
+  "shell": "fish",
+  "editor": "vi",
+  "hooks": {
+    "onSwitchFrom": {},
+    "onSwitchTo": {}
+  }
+}
