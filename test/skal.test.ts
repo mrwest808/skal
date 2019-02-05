@@ -18,13 +18,16 @@ const testPaths = {
   hooks: path.join(tmpPath, 'hooks'),
 };
 
-afterAll(() => {
+function cleanup() {
   Object.entries(testPaths).forEach(([_, filePath]) => {
     if (fs.existsSync(filePath)) {
       fs.removeSync(filePath);
     }
   });
-});
+}
+
+beforeAll(cleanup);
+afterAll(cleanup);
 
 describe('instantiation', () => {
   const basePath = testPaths.instantiation;
