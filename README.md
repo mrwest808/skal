@@ -6,7 +6,7 @@
   <a href="https://github.com/mrwest808/skal/blob/master/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
 </p>
 <p align="center">Manage separate shell configurations with ease.</p>
-<p align="center">:sweden: skal • :gb: shell</p>
+<p align="center">:sweden: skal&nbsp;&nbsp;&nbsp;:gb: shell</p>
 
 ## Installation
 
