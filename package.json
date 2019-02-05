@@ -1,6 +1,6 @@
 {
   "name": "skal",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "repository": "git@github.com:mrwest808/skal.git",
   "author": "Johan <johan.west@viablelab.se>",
   "license": "MIT",
@@ -22,6 +22,7 @@
     "build": "babel src --out-dir dist --extensions '.ts'",
     "prebuild": "yarn test",
     "prepublishOnly": "yarn build",
+    "release": "standard-version",
     "test": "jest test/*.test.ts"
   },
   "dependencies": {
@@ -53,6 +54,7 @@
     "jest": "^24.0.0",
     "jest-expect-message": "^1.0.2",
     "ncp": "^2.0.0",
+    "standard-version": "^4.4.0",
     "typescript": "^3.3.1"
   }
 }
