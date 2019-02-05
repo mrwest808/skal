@@ -31,7 +31,7 @@ $ skal --help
   Options
     --new, -n       Create a new profile
     --list, -l      List available profiles
-    --config, -c    Open configuration
+    --config, -c    Edit configuration
     --edit, -e      Select and edit profile
 
   Examples
