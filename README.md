@@ -20,6 +20,8 @@ Run `skal` in your terminal to initialize, follow the instructions.
 
 Create and manage profiles under `$HOME/.skal/profiles`, use `skal` to switch between them.
 
+[![GIF showing terminal usage](https://user-images.githubusercontent.com/6108538/52310924-673e7580-29a5-11e9-90ae-1ec0ebf2e07b.gif)]
+
 ```sh
 $ skal --help
 
