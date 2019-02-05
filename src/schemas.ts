@@ -12,7 +12,7 @@ const hookMap = Joi.object().pattern(/^/, commandList);
 
 const schemas = {
   config: Joi.object().keys({
-    shell: Joi.string().required(),
+    shell: Joi.any(),
     editor: Joi.string().required(),
     hooks: Joi.object()
       .keys({

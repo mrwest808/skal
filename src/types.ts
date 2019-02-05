@@ -1,11 +1,9 @@
 import { Questions } from 'inquirer';
 import { CustomError } from './errors';
 
-export type Shell = 'fish' | 'zsh';
 export type Editor = string;
 
 export interface Config {
-  shell: Shell;
   editor: Editor;
   hooks: Hooks;
 }
@@ -16,14 +14,11 @@ export interface Hooks {
 }
 
 export interface HookMap {
-  [profileName: string]: HookCmd[];
+  [profileName: string]: string[];
 }
-
-export type HookCmd = string | HookCmdObject;
 
 export interface HookCmdObject {
   cmd: string;
-  whenShell?: string;
 }
 
 export interface InternalOptions {
@@ -42,10 +37,6 @@ export interface Paths {
   profiles: string;
   symlink: string;
   [key: string]: string;
-}
-
-export interface ListProfilesOptions {
-  extension?: boolean;
 }
 
 export enum CliRunnerAction {

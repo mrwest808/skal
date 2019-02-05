@@ -9,16 +9,14 @@ export enum ErrorCode {
   BadInternalOptionsRead = 104,
   BadInternalOptionsFormat = 105,
   BadInternalOptionsWrite = 106,
-  MissingShell = 107,
-  MissingEditor = 108,
-  UnsupportedShell = 109,
-  DuplicateProfile = 110,
-  BadProfileWrite = 111,
-  ProfileAlreadyActive = 112,
-  MissingProfile = 113,
-  BadActiveFileWrite = 114,
-  HooksNoConfig = 115,
-  BadDefaultProfileWrite = 116,
+  MissingEditor = 107,
+  DuplicateProfile = 108,
+  BadProfileWrite = 109,
+  ProfileAlreadyActive = 110,
+  MissingProfile = 111,
+  BadActiveFileWrite = 112,
+  HooksNoConfig = 113,
+  BadDefaultProfileWrite = 114,
 
   // ./cli-runner.ts
   NoActiveEditor = 200,
@@ -48,17 +46,9 @@ export const errors = {
     ErrorCode.BadInternalOptionsWrite,
     'Could not write internal options.'
   ),
-  missingShell: createError(
-    ErrorCode.MissingShell,
-    'Missing `shell` argument.'
-  ),
   missingEditor: createError(
     ErrorCode.MissingEditor,
     'Missing `editor` argument.'
-  ),
-  unsupportedShell: createError(
-    ErrorCode.UnsupportedShell,
-    'Unsupported `shell` argument supplied, choose between `fish` and `zsh`.'
   ),
   duplicateProfile: createError(
     ErrorCode.DuplicateProfile,

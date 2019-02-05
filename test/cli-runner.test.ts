@@ -56,7 +56,7 @@ afterAll(cleanup);
 describe('initialization', () => {
   test('creates files and calls reporter effects', async () => {
     const basePath = testPaths.initialization;
-    const answers = { shell: 'fish', editor: 'vi' };
+    const answers = { editor: 'vi' };
     const opts = {
       action: Action.SelectProfile,
       basePath,
@@ -94,7 +94,7 @@ describe('actions', () => {
 
   test('listProfiles', async () => {
     const basePath = testPaths.listProfiles;
-    const profiles = ['one', 'two'];
+    const profiles = ['one.fish', 'two.fish'];
     const opts = {
       action: Action.ListProfiles,
       basePath,
@@ -105,7 +105,7 @@ describe('actions', () => {
 
     expect(runner.action).toBe(Action.ListProfiles);
     await runner.run();
-    expect(opts.reporter.listProfilesDone).toBeCalledWith(profiles, 'one');
+    expect(opts.reporter.listProfilesDone).toBeCalledWith(profiles, 'one.fish');
   });
 
   test('editConfig', async () => {
@@ -146,7 +146,7 @@ describe('actions', () => {
     const opts = {
       action: Action.NewProfile,
       basePath,
-      effects: createMockEffects({ name: 'three' }),
+      effects: createMockEffects({ name: 'three.fish' }),
       reporter: createMockReporter(),
     };
     const runner = new CliRunner(opts);
@@ -167,7 +167,7 @@ describe('actions', () => {
     const opts = {
       action: Action.SelectProfile,
       basePath,
-      effects: createMockEffects({ selected: 'two' }),
+      effects: createMockEffects({ selected: 'two.fish' }),
       reporter: createMockReporter(),
     };
     const runner = new CliRunner(opts);
@@ -176,7 +176,7 @@ describe('actions', () => {
     expect(read(paths.symlink)).toBe(read(paths.profileOne));
     await runner.run();
     expect(read(paths.symlink)).toBe(read(paths.profileTwo));
-    expect(opts.reporter.selectProfileDone).toBeCalledWith('two', []);
+    expect(opts.reporter.selectProfileDone).toBeCalledWith('two.fish', []);
   });
 
   test('selectProfile with hooks', async () => {
@@ -189,7 +189,7 @@ describe('actions', () => {
     const opts = {
       action: Action.SelectProfile,
       basePath,
-      effects: createMockEffects({ selected: 'two' }),
+      effects: createMockEffects({ selected: 'two.fish' }),
       reporter: createMockReporter(),
     };
     const runner = new CliRunner(opts);
@@ -201,6 +201,9 @@ describe('actions', () => {
     expect(read(paths.symlink)).toBe(read(paths.profileTwo));
     expect(opts.effects.execCommand).toBeCalledTimes(1);
     expect(opts.effects.execCommand).toBeCalledWith(commands[0]);
-    expect(opts.reporter.selectProfileDone).toBeCalledWith('two', commands);
+    expect(opts.reporter.selectProfileDone).toBeCalledWith(
+      'two.fish',
+      commands
+    );
   });
 });

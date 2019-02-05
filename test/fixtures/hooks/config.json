@@ -1,13 +1,12 @@
 {
-  "shell": "fish",
   "editor": "vi",
   "hooks": {
     "onSwitchFrom": {
-      "two": ["echo 'Switching from two'"]
+      "two.fish": ["echo 'Switching from two'"]
     },
     "onSwitchTo": {
-      "one": ["echo 'Switching to one'"],
-      "two": ["echo 'Switching to two'"]
+      "one.fish": ["echo 'Switching to one'"],
+      "two.fish": ["echo 'Switching to two'"]
     }
   }
 }

@@ -53,18 +53,13 @@ describe('instantiation', () => {
 describe('.initialize()', () => {
   const basePath = testPaths.initialize;
   const instance = new Skal({ basePath });
-  const shellArg = 'fish';
   const editorArg = 'vi';
 
   test('throws when invoked with invalid args', () => {
     const noArgs = () => (instance.initialize as any)();
-    const noEditor = () => (instance.initialize as any)('fish');
-    const badShell = () => (instance.initialize as any)('shark');
-    const goodArgs = () => instance.initialize(shellArg, editorArg);
+    const goodArgs = () => instance.initialize(editorArg);
 
-    expect(noArgs).toThrow(re(ErrorCode.MissingShell));
-    expect(noEditor).toThrow(re(ErrorCode.MissingEditor));
-    expect(badShell).toThrow(re(ErrorCode.UnsupportedShell));
+    expect(noArgs).toThrow(re(ErrorCode.MissingEditor));
     expect(goodArgs).not.toThrow();
   });
 
@@ -75,10 +70,7 @@ describe('.initialize()', () => {
       expectWithMessage(actual, message).toBe(true);
     });
 
-    const defaultProfilePath = path.join(
-      instance.paths.profiles,
-      'default.fish'
-    );
+    const defaultProfilePath = path.join(instance.paths.profiles, 'default');
     expect(fs.existsSync(defaultProfilePath)).toBe(true);
   });
 
@@ -86,7 +78,6 @@ describe('.initialize()', () => {
     expect(instance.initialized).toBe(true);
     expect(instance.config).toBeDefined();
     expect(instance.config).toHaveProperty('hooks');
-    expect(instance.activeShell).toBe(shellArg);
     expect(instance.activeEditor).toBe(editorArg);
     expect(instance.activeProfile).toBe('default');
     const pathRegex = new RegExp(`^${basePath}`);
@@ -107,11 +98,6 @@ describe('.listProfiles()', () => {
 
   test('lists available profiles (without extension)', async () => {
     const profiles = await instance.listProfiles();
-    expect(profiles).toEqual(['one', 'two']);
-  });
-
-  test('provides option to list with extensions', async () => {
-    const profiles = await instance.listProfiles({ extension: true });
     expect(profiles).toEqual(['one.fish', 'two.fish']);
   });
 });
@@ -129,7 +115,7 @@ describe('.createProfile()', () => {
   });
 
   test('throws on duplication', () => {
-    const fn = () => instance.createProfile('two');
+    const fn = () => instance.createProfile('two.fish');
     expect(fn).toThrow(re(ErrorCode.DuplicateProfile));
   });
 
@@ -157,18 +143,18 @@ describe('.activateProfile()', () => {
   });
 
   test('throws on already active', async () => {
-    const promise = instance.activateProfile('one');
+    const promise = instance.activateProfile('one.fish');
     await expect(promise).rejects.toThrow(re(ErrorCode.ProfileAlreadyActive));
   });
 
   test('throws on missing profile', async () => {
-    const promise = instance.activateProfile('four');
+    const promise = instance.activateProfile('four.fish');
     await expect(promise).rejects.toThrow(re(ErrorCode.MissingProfile));
   });
 
   test('updates active profile', async () => {
-    await instance.activateProfile('two');
-    expect(instance.activeProfile).toBe('two');
+    await instance.activateProfile('two.fish');
+    expect(instance.activeProfile).toBe('two.fish');
   });
 
   test('updates _active file', () => {
@@ -205,7 +191,7 @@ describe('config validation', () => {
   beforeAll(done => copy(copyPath, basePath, done));
 
   test('throws on invalid format', () => {
-    const jsonString = JSON.stringify({ shell: 'fish', hooks: {} }, null, '  ');
+    const jsonString = JSON.stringify({ hooks: {} }, null, '  ');
     write(configPath, jsonString);
     const fn = () => new Skal({ basePath });
     expect(fn).toThrow(re(ErrorCode.BadConfigFormat));
@@ -225,12 +211,12 @@ describe('hooks', () => {
   });
 
   test('.activateProfile() returns a list of hook commands', async () => {
-    expect(instance.activeProfile).toBe('one');
-    const commands = await instance.activateProfile('two');
-    expect(instance.activeProfile).toBe('two');
+    expect(instance.activeProfile).toBe('one.fish');
+    const commands = await instance.activateProfile('two.fish');
+    expect(instance.activeProfile).toBe('two.fish');
     expect(commands).toEqual(["echo 'Switching to two'"]);
-    const newCommands = await instance.activateProfile('one');
-    expect(instance.activeProfile).toBe('one');
+    const newCommands = await instance.activateProfile('one.fish');
+    expect(instance.activeProfile).toBe('one.fish');
     expect(newCommands).toEqual([
       "echo 'Switching from two'",
       "echo 'Switching to one'",

@@ -6,7 +6,6 @@ import {
   CliRunnerEffects as Effects,
   CliRunnerOptions,
   Reporter,
-  Shell,
   Editor,
 } from './types';
 
@@ -67,12 +66,6 @@ export default class CliRunner {
     const questions = [
       {
         type: 'input',
-        name: 'shell',
-        message: 'What shell are you using?',
-        default: 'fish',
-      },
-      {
-        type: 'input',
         name: 'editor',
         message:
           'What editor do you use? (provide the command name you use to edit files in your terminal)',
@@ -80,9 +73,9 @@ export default class CliRunner {
       },
     ];
 
-    let answers: { shell: Shell; editor: Editor };
+    let answers: { editor: Editor };
     answers = await this.effects.prompt(questions);
-    this.skal.initialize(answers.shell, answers.editor);
+    this.skal.initialize(answers.editor);
     this.reporter.initializeDone(this.skal.paths);
   }
 
@@ -91,23 +84,19 @@ export default class CliRunner {
   }
 
   private async editProfile() {
-    const profiles = await this.skal.listProfiles({ extension: true });
+    const profiles = await this.skal.listProfiles();
     const questions = [
       {
         type: 'list',
         name: 'selected',
         message: 'Which profile do you want to edit?',
-        choices: profiles.map(profile => {
-          const withoutExt = path.basename(profile, path.extname(profile));
-
-          return {
-            name:
-              withoutExt === this.skal.activeProfile
-                ? `${withoutExt} (active)`
-                : withoutExt,
-            value: profile,
-          };
-        }),
+        choices: profiles.map(profile => ({
+          name:
+            profile === this.skal.activeProfile
+              ? `${profile} (active)`
+              : profile,
+          value: profile,
+        })),
       },
     ];
 

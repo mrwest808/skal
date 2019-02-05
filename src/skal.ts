@@ -7,13 +7,10 @@ import { errors } from './errors';
 import schemas from './schemas';
 import {
   Config,
-  Shell,
   Editor,
   ConstructorOptions,
   InternalOptions,
   Paths,
-  HookCmdObject,
-  ListProfilesOptions,
 } from './types';
 
 const defaultOptions = {
@@ -24,7 +21,6 @@ export default class Skal {
   public initialized = false;
   public config?: Config;
   public paths: Paths;
-  public activeShell?: Shell;
   public activeEditor?: Editor;
   public activeProfile?: string;
 
@@ -60,15 +56,7 @@ export default class Skal {
    * Public methods
    */
 
-  public initialize = (shell: Shell, editor: Editor) => {
-    if (!shell) {
-      throw errors.missingShell();
-    }
-
-    if (['fish', 'zsh'].indexOf(shell) === -1) {
-      throw errors.unsupportedShell();
-    }
-
+  public initialize = (editor: Editor) => {
     if (!editor) {
       throw errors.missingEditor();
     }
@@ -78,15 +66,11 @@ export default class Skal {
 
     const internalOptions = { activeProfile: 'default' };
     const initialConfig = {
-      shell,
       editor,
       hooks: { onSwitchFrom: {}, onSwitchTo: {} },
     };
 
-    const defaultProfilePath = path.join(
-      this.paths.profiles,
-      `default.${shell}`
-    );
+    const defaultProfilePath = path.join(this.paths.profiles, `default`);
 
     this.createDefaultProfile(defaultProfilePath);
     this.createSymlink(defaultProfilePath);
@@ -95,21 +79,17 @@ export default class Skal {
     this.populateProperties(initialConfig, internalOptions);
   };
 
-  public async listProfiles(opts: ListProfilesOptions = {}): Promise<string[]> {
-    const ext = `.${this.activeShell}`;
-    const pattern = `*${ext}`;
+  public async listProfiles(): Promise<string[]> {
+    const pattern = `*`;
     const profiles = await globby(pattern, {
       cwd: this.paths.profiles,
-      transform: filename =>
-        opts.extension ? filename : path.basename(filename as string, ext),
     });
     profiles.sort();
     return profiles;
   }
 
   public createProfile(name: string): string {
-    const ext = this.activeShell;
-    const filePath = path.join(this.paths.profiles, `${name}.${ext}`);
+    const filePath = path.join(this.paths.profiles, name);
 
     if (fs.existsSync(filePath)) {
       const error = new Error(`Profile already exists: ${name}`);
@@ -138,7 +118,7 @@ export default class Skal {
       throw errors.missingProfile(error);
     }
 
-    const fileName = `${profile}.${this.activeShell}`;
+    const fileName = profile;
     const profilePath = path.join(this.paths.profiles, fileName);
     const lastProfile = this.activeProfile;
 
@@ -156,7 +136,6 @@ export default class Skal {
   private populateProperties(config: Config, internalOptions: InternalOptions) {
     this.initialized = true;
     this.config = config;
-    this.activeShell = config.shell;
     this.activeEditor = config.editor;
     this.activeProfile = internalOptions.activeProfile;
     this.internalOptions = internalOptions;
@@ -259,21 +238,7 @@ export default class Skal {
     const { hooks } = this.config;
     const fromHooks = hooks.onSwitchFrom[from] || [];
     const toHooks = hooks.onSwitchTo[to] || [];
-    const commands: string[] = [];
-
-    fromHooks.concat(toHooks).forEach(hook => {
-      if (typeof hook === 'string') {
-        commands.push(hook);
-        return;
-      }
-
-      if (
-        (hook as HookCmdObject).hasOwnProperty('whenInShell') &&
-        (hook as HookCmdObject).whenShell !== this.activeShell
-      ) {
-        commands.push((hook as HookCmdObject).cmd);
-      }
-    });
+    const commands = fromHooks.concat(toHooks);
 
     return commands;
   }
