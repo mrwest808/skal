@@ -32,7 +32,7 @@ const reporter: Reporter = {
   },
   initializeIntro() {
     const message =
-      "It looks like this is your first time using Skal, let's setup things up!";
+      "It looks like this is your first time using Skal, let's set things up!\n";
     log(message);
   },
   initializeDone(paths) {
