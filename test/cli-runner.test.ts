@@ -14,8 +14,7 @@ const tmpPath = path.join(os.tmpdir(), 'cli-runner');
 const fixturesPath = path.resolve(__dirname, 'fixtures');
 
 const testPaths = {
-  instantiationNotInitialized: path.join(tmpPath, 'not-instantiation'),
-  instantiationInitialized: path.join(tmpPath, 'initialized'),
+  initialization: path.join(tmpPath, 'initialization'),
   editConfig: path.join(tmpPath, 'edit-config'),
   editProfile: path.join(tmpPath, 'edit-profile'),
   listProfiles: path.join(tmpPath, 'list-profiles'),
@@ -54,13 +53,9 @@ function cleanup() {
 beforeAll(cleanup);
 afterAll(cleanup);
 
-describe('instantiation', () => {
-  const fixture = path.join(fixturesPath, 'simple');
-
-  beforeAll(done => copy(fixture, testPaths.instantiationInitialized, done));
-
-  test('instantiation (not initialized)', async () => {
-    const basePath = testPaths.instantiationNotInitialized;
+describe('initialization', () => {
+  test('creates files and calls reporter effects', async () => {
+    const basePath = testPaths.initialization;
     const answers = { shell: 'fish', editor: 'vi' };
     const opts = {
       action: Action.SelectProfile,
@@ -76,20 +71,6 @@ describe('instantiation', () => {
     expect(fs.existsSync(basePath)).toBe(true);
     expect(opts.reporter.initializeIntro).toBeCalled();
     expect(opts.reporter.initializeDone).toBeCalled();
-  });
-
-  test('instantiation (initialized)', async () => {
-    const basePath = testPaths.instantiationInitialized;
-    const opts = {
-      action: Action.ListProfiles,
-      basePath,
-      effects: createMockEffects(),
-      reporter: createMockReporter(),
-    };
-    const runner = new CliRunner(opts);
-
-    expect(runner.action).toBe(Action.ListProfiles);
-    await runner.run();
   });
 });
 
