@@ -57,13 +57,6 @@ afterAll(cleanup);
 describe('instantiation', () => {
   const fixture = path.join(fixturesPath, 'simple');
 
-  console.log('-> fixture', fixture, fs.existsSync(fixture));
-  console.log(
-    '-> testPath',
-    testPaths.instantiationInitialized,
-    fs.existsSync(testPaths.instantiationInitialized)
-  );
-
   beforeAll(done => copy(fixture, testPaths.instantiationInitialized, done));
 
   test('instantiation (not initialized)', async () => {
