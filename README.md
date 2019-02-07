@@ -96,3 +96,31 @@ interface HookMap {
   [profileName: string]: string[];
 }
 ```
+
+Keep in mind that hooks are run in [a child process](#hooks-run-in-a-node-child_process).
+
+## Gotchas
+
+### Re-sourcing after profile switch
+
+After running `skal` and switching the active profile, the currently active shell needs to be reloaded. The easiest way to do this is to open up a new terminal window or running something equivalent to `source "\$HOME/.skal/active"` again.
+
+One way to get around this would be to create a local function re-sourcing after `skal` has finished. In fish shell, this could like this:
+
+```fish
+# ~/.config/fish/config.fish
+
+source "$HOME/.skal/active"
+
+function skal
+  command skal $argv
+
+  if test (count $argv) = 0
+    source "$HOME/.skal/active"
+  end
+end
+```
+
+### Hooks run in a Node child_process
+
+Node's `child_process` module to execute hooks. This means that they run in a child process, separate from your currently running shell. Doing something like `source "$HOME/.skal/active` inside a hook won't be applied to your terminal shell.
