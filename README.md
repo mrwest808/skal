@@ -123,4 +123,4 @@ end
 
 ### Hooks run in a Node child_process
 
-Node's `child_process` module to execute hooks. This means that they run in a child process, separate from your currently running shell. Doing something like `source "$HOME/.skal/active` inside a hook won't be applied to your terminal shell.
+Node's `child_process` module is used to execute hooks. This means that they run in a child process, separate from your currently running shell. Doing something like `source "$HOME/.skal/active` inside a hook won't be applied to your terminal shell.
