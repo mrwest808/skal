@@ -55,8 +55,7 @@ if (flags.new) {
 
 const effects: Effects = {
   async execCommand(cmd) {
-    const [command, ...args] = cmd.trim().split(/\s+/);
-    return execa(command, args);
+    return execa.shell(cmd);
   },
   openEditor(editor: Editor, filePath: string) {
     const spawn = child_process.spawn(editor, [filePath], {

@@ -42,6 +42,11 @@ const reporter: Reporter = {
 
       Include this file in your shell config file:
         ${paths.symlink}
+      
+      (example how this could look in a .zshrc file)
+        source "$HOME/.skal/active"
+      
+      The "active" file is a symbolic link towards the currently active profile.
     `);
     log(message);
   },
