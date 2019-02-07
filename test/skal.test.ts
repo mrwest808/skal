@@ -214,10 +214,14 @@ describe('hooks', () => {
     expect(instance.activeProfile).toBe('one.fish');
     const commands = await instance.activateProfile('two.fish');
     expect(instance.activeProfile).toBe('two.fish');
-    expect(commands).toEqual(["echo 'Switching to two'"]);
+    expect(commands).toEqual([
+      "echo 'Switching profile...'",
+      "echo 'Switching to two'",
+    ]);
     const newCommands = await instance.activateProfile('one.fish');
     expect(instance.activeProfile).toBe('one.fish');
     expect(newCommands).toEqual([
+      "echo 'Switching profile...'",
       "echo 'Switching from two'",
       "echo 'Switching to one'",
     ]);

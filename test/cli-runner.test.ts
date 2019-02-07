@@ -197,10 +197,11 @@ describe('actions', () => {
     expect(runner.action).toBe(Action.SelectProfile);
     expect(read(paths.symlink)).toBe(read(paths.profileOne));
     await runner.run();
-    const commands = ["echo 'Switching to two'"];
+    const commands = ["echo 'Switching profile...'", "echo 'Switching to two'"];
     expect(read(paths.symlink)).toBe(read(paths.profileTwo));
-    expect(opts.effects.execCommand).toBeCalledTimes(1);
-    expect(opts.effects.execCommand).toBeCalledWith(commands[0]);
+    expect(opts.effects.execCommand).toBeCalledTimes(2);
+    expect(opts.effects.execCommand).toHaveBeenNthCalledWith(1, commands[0]);
+    expect(opts.effects.execCommand).toHaveBeenNthCalledWith(2, commands[1]);
     expect(opts.reporter.selectProfileDone).toBeCalledWith(
       'two.fish',
       commands

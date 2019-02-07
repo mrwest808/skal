@@ -2,6 +2,7 @@
   "editor": "vi",
   "hooks": {
     "onSwitchFrom": {
+      "*": ["echo 'Switching profile...'"],
       "two.fish": ["echo 'Switching from two'"]
     },
     "onSwitchTo": {

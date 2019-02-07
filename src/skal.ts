@@ -236,9 +236,15 @@ export default class Skal {
     }
 
     const { hooks } = this.config;
+    const wildcardFromHooks = hooks.onSwitchFrom['*'] || [];
     const fromHooks = hooks.onSwitchFrom[from] || [];
+    const wildcardToHooks = hooks.onSwitchTo['*'] || [];
     const toHooks = hooks.onSwitchTo[to] || [];
-    const commands = fromHooks.concat(toHooks);
+    const commands = wildcardFromHooks.concat(
+      fromHooks,
+      wildcardToHooks,
+      toHooks
+    );
 
     return commands;
   }
