@@ -41,11 +41,11 @@ export interface Paths {
 
 export enum CliRunnerAction {
   Initialize,
-  EditConfig,
-  EditProfile,
   ListProfiles,
   NewProfile,
   SelectProfile,
+  WhichProfile,
+  Edit,
 }
 
 export interface CliRunnerEffects {
@@ -61,6 +61,7 @@ export interface Reporter {
   listProfilesDone: (profiles: string[], active?: string) => void;
   newProfileDone: (filePath: string) => void;
   selectProfileDone: (profile: string, commands: string[]) => void;
+  whichProfileDone: (profile: string) => void;
 }
 
 export interface CliRunnerOptions {

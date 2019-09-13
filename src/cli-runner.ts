@@ -34,14 +34,14 @@ export default class CliRunner {
       case Action.Initialize:
         fn = this.initialize;
         break;
-      case Action.EditConfig:
-        fn = this.editConfig;
-        break;
-      case Action.EditProfile:
-        fn = this.editProfile;
-        break;
       case Action.ListProfiles:
         fn = this.listProfiles;
+        break;
+      case Action.WhichProfile:
+        fn = this.whichProfile;
+        break;
+      case Action.Edit:
+        fn = this.edit;
         break;
       case Action.NewProfile:
         fn = this.newProfile;
@@ -79,33 +79,6 @@ export default class CliRunner {
     this.reporter.initializeDone(this.skal.paths);
   }
 
-  private editConfig() {
-    this.openEditor(this.skal.paths.config);
-  }
-
-  private async editProfile() {
-    const profiles = await this.skal.listProfiles();
-    const questions = [
-      {
-        type: 'list',
-        name: 'selected',
-        message: 'Which profile do you want to edit?',
-        choices: profiles.map(profile => ({
-          name:
-            profile === this.skal.activeProfile
-              ? `${profile} (active)`
-              : profile,
-          value: profile,
-        })),
-      },
-    ];
-
-    let answers: { selected: string };
-    answers = await this.effects.prompt(questions);
-    const profilePath = path.join(this.skal.paths.profiles, answers.selected);
-    this.openEditor(profilePath);
-  }
-
   private async listProfiles() {
     const profiles = await this.skal.listProfiles();
 
@@ -114,6 +87,36 @@ export default class CliRunner {
     }
 
     this.reporter.listProfilesDone(profiles, this.skal.activeProfile);
+  }
+
+  private whichProfile() {
+    const activeProfile = this.skal.activeProfile as string;
+    this.reporter.whichProfileDone(activeProfile);
+  }
+
+  private async edit() {
+    const configPath = this.skal.paths.config;
+    const profiles = await this.skal.listProfiles();
+    const questions = [
+      {
+        type: 'list',
+        name: 'filePath',
+        message: 'Which file do you want to edit?',
+        choices: [
+          { name: 'config.json', value: configPath },
+          ...profiles.map(profile => ({
+            name:
+              profile === this.skal.activeProfile
+                ? `profiles/${profile} (active)`
+                : `profiles/${profile}`,
+            value: path.join(this.skal.paths.profiles, profile),
+          })),
+        ],
+      },
+    ];
+
+    const { filePath } = await this.effects.prompt(questions);
+    this.openEditor(filePath);
   }
 
   private async newProfile() {

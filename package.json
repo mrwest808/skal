@@ -21,8 +21,9 @@
   ],
   "scripts": {
     "build": "babel src --out-dir dist --extensions '.ts'",
-    "prebuild": "yarn test",
+    "postbuild": "yarn test",
     "prepublishOnly": "yarn build",
+    "commit": "git-cz",
     "release": "standard-version",
     "test": "jest test/*.test.ts"
   },
@@ -43,6 +44,7 @@
     "@babel/preset-env": "^7.3.1",
     "@babel/preset-typescript": "^7.1.0",
     "@types/async": "^2.4.0",
+    "@types/concat-stream": "^1.6.0",
     "@types/execa": "^0.9.0",
     "@types/fs-extra": "^5.0.4",
     "@types/globby": "^8.0.0",
@@ -52,6 +54,9 @@
     "@types/meow": "^5.0.0",
     "async": "^2.6.1",
     "babel-jest": "^24.0.0",
+    "commitizen": "^4.0.3",
+    "concat-stream": "^2.0.0",
+    "cz-conventional-changelog": "3.0.2",
     "jest": "^24.0.0",
     "jest-expect-message": "^1.0.2",
     "ncp": "^2.0.0",
@@ -60,5 +65,10 @@
   },
   "resolutions": {
     "standard-version/**/handlebars": "4.1.2"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }

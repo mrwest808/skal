@@ -84,6 +84,10 @@ const reporter: Reporter = {
     message += chalk`{bold Activated profile:} ${profile}`;
     log(message);
   },
+  whichProfileDone(profile) {
+    const message = chalk`{bold Active profile:} ${profile}`;
+    log(message);
+  },
 };
 
 export default reporter;

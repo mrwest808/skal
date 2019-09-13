@@ -15,49 +15,58 @@ const cli = meow(
   Manage shell profiles.
 
   Usage
-    $ skal [<option>]
-  
+    $ skal [<command>]
+
+  Commands
+    new         Create a new profile
+    list        List available profiles
+    which       Print path to active profile
+    config      Print path to config file
+    edit        Edit profile or configuration
+
+    Run without arguments for an interactive prompt to switch active profile.
+
   Options
-    --new, -n       Create a new profile
-    --list, -l      List available profiles
-    --config, -c    Edit configuration
-    --edit, -e      Select and edit profile
-  
-  Examples
-    $ skal          Interactive prompt to change active profile
-    $ skal --list
-`,
-  {
-    flags: {
-      new: { type: 'boolean', alias: 'n' },
-      list: { type: 'boolean', alias: 'l' },
-      config: { type: 'boolean', alias: 'c' },
-      edit: { type: 'boolean', alias: 'e' },
-    },
-  }
+    --help      Show help
+    --version   Print version
+`
 );
 
-const { flags } = cli;
-let action = Action.SelectProfile;
+const { input } = cli;
+const [command] = input;
+let action: Action;
 
-if (flags.config) {
-  action = Action.EditConfig;
+switch (command) {
+  case 'new':
+    action = Action.NewProfile;
+    break;
+  case 'list':
+    action = Action.ListProfiles;
+    break;
+  case 'which':
+    action = Action.WhichProfile;
+    break;
+  case 'edit':
+    action = Action.Edit;
+    break;
+  default:
+    action = Action.SelectProfile;
+    break;
 }
-if (flags.edit) {
-  action = Action.EditProfile;
-}
-if (flags.list) {
-  action = Action.ListProfiles;
-}
-if (flags.new) {
-  action = Action.NewProfile;
-}
+
+const isTestMode =
+  process.env.NODE_ENV === 'test' && process.env.SKAL_TEST_BASE_PATH;
 
 const effects: Effects = {
   async execCommand(cmd) {
     return execa.shell(cmd);
   },
   openEditor(editor: Editor, filePath: string) {
+    if (isTestMode) {
+      console.log('%s %s', editor, filePath);
+      return;
+    }
+
     const spawn = child_process.spawn(editor, [filePath], {
       stdio: 'inherit',
     });
@@ -71,6 +80,7 @@ const effects: Effects = {
 
 const cliRunner = new CliRunner({
   action,
+  basePath: isTestMode ? process.env.SKAL_TEST_BASE_PATH : undefined,
   effects,
   reporter: consoleReporter,
 });
