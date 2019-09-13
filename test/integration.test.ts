@@ -8,6 +8,7 @@ import {
   read,
   write,
   append,
+  exists,
 } from './test-utils';
 
 const cliPath = path.resolve(__dirname, '../bin/cli.js');
@@ -19,7 +20,7 @@ const execute = createExecuter(cliPath, {
 });
 
 function cleanup() {
-  if (fs.existsSync(basePath)) {
+  if (exists(basePath)) {
     fs.removeSync(basePath);
   }
 }
@@ -44,10 +45,10 @@ describe('initialization', () => {
   });
 
   test('creates expected files', () => {
-    expect(fs.existsSync(basePath)).toBe(true);
-    expect(fs.existsSync(relativeTo(basePath, 'config.json'))).toBe(true);
-    expect(fs.existsSync(relativeTo(basePath, 'profiles/default'))).toBe(true);
-    expect(fs.existsSync(relativeTo(basePath, 'active'))).toBe(true);
+    expect(exists(basePath)).toBe(true);
+    expect(exists(relativeTo(basePath, 'config.json'))).toBe(true);
+    expect(exists(relativeTo(basePath, 'profiles/default'))).toBe(true);
+    expect(exists(relativeTo(basePath, 'active'))).toBe(true);
   });
 });
 
@@ -60,7 +61,7 @@ describe('new command', () => {
   });
 
   test('created expected file', () => {
-    expect(fs.existsSync(relativeTo(basePath, 'profiles/work'))).toBe(true);
+    expect(exists(relativeTo(basePath, 'profiles/work'))).toBe(true);
   });
 
   test('prevents duplicate profile names', async () => {

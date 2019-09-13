@@ -6,6 +6,7 @@ import concat from 'concat-stream';
 export const read = (p: string) => fs.readFileSync(p, 'utf8');
 export const write = (p: string, s: string) => fs.writeFileSync(p, s, 'utf8');
 export const append = (p: string, s: string) => fs.appendFileSync(p, s, 'utf8');
+export const exists = (p: string) => fs.existsSync(p);
 
 interface EnvironmentVariables {
   [key: string]: string;
