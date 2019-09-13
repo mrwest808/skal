@@ -113,6 +113,7 @@ One way to get around this would be to create a local function re-sourcing after
 
 ```zsh
 # ~/.zshrc
+
 source "$HOME/.skal/active"
 
 function skal() {
