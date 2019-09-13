@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.3.0"></a>
+# [0.3.0](https://github.com/mrwest808/skal/compare/v0.2.2...v0.3.0) (2019-09-13)
+
+
+### Features
+
+* new API ([0aab884](https://github.com/mrwest808/skal/commit/0aab884))
+
+
+
 <a name="0.2.2"></a>
 ## [0.2.2](https://github.com/mrwest808/skal/compare/v0.2.1...v0.2.2) (2019-07-05)
 
