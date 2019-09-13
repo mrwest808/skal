@@ -107,7 +107,24 @@ Keep in mind that hooks are run in [a child process](#hooks-run-in-a-node-child_
 
 After running `skal` and switching the active profile, the currently active shell needs to be reloaded. The easiest way to do this is to open up a new terminal window or running something equivalent to `source "\$HOME/.skal/active"` again.
 
-One way to get around this would be to create a local function re-sourcing after `skal` has finished. In fish shell, this could like this:
+One way to get around this would be to create a local function re-sourcing after `skal` has finished.
+
+#### Zsh
+
+```zsh
+# ~/.zshrc
+source "$HOME/.skal/active"
+
+function skal() {
+  command skal "$@"
+
+  if (( $# == 0 )) then
+    source "$HOME/.skal/active"
+  fi
+}
+```
+
+#### Fish
 
 ```fish
 # ~/.config/fish/config.fish
