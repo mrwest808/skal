@@ -99,6 +99,7 @@ describe('which command', () => {
   test('prints path to currently active profile', async () => {
     const response = await execute(['which']);
     expect(response).toContain('Active profile: default');
+    expect(response).toContain(path.join(basePath, 'profiles/default'));
   });
 });
 

@@ -61,7 +61,7 @@ export interface Reporter {
   listProfilesDone: (profiles: string[], active?: string) => void;
   newProfileDone: (filePath: string) => void;
   selectProfileDone: (profile: string, commands: string[]) => void;
-  whichProfileDone: (profile: string) => void;
+  whichProfileDone: (profile: string, profilePath: string) => void;
 }
 
 export interface CliRunnerOptions {

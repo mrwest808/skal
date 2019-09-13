@@ -91,7 +91,11 @@ export default class CliRunner {
 
   private whichProfile() {
     const activeProfile = this.skal.activeProfile as string;
-    this.reporter.whichProfileDone(activeProfile);
+    const activeProfilePath = path.join(
+      this.skal.paths.profiles,
+      activeProfile
+    );
+    this.reporter.whichProfileDone(activeProfile, activeProfilePath);
   }
 
   private async edit() {

@@ -84,8 +84,9 @@ const reporter: Reporter = {
     message += chalk`{bold Activated profile:} ${profile}`;
     log(message);
   },
-  whichProfileDone(profile) {
-    const message = chalk`{bold Active profile:} ${profile}`;
+  whichProfileDone(profile, profilePath) {
+    let message = chalk`{bold Active profile:} ${profile}\n`;
+    message += chalk`{gray ${profilePath}}`;
     log(message);
   },
 };
