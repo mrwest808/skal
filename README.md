@@ -34,7 +34,6 @@ $ skal --help
     new         Create a new profile
     list        List available profiles
     which       Print path to active profile
-    config      Print path to config file
     edit        Edit profile or configuration
 
     Run without arguments for an interactive prompt to switch active profile.
