@@ -2,10 +2,9 @@ import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
 import {
-  executeWithInput,
   Keys,
-  splitByEOL,
-  createRelativeExistsCheck,
+  createExecuter,
+  relativeTo,
   read,
   write,
   append,
@@ -13,15 +12,11 @@ import {
 
 const cliPath = path.resolve(__dirname, '../bin/cli.js');
 const basePath = path.join(os.tmpdir(), 'skal-test');
-const executeOptions = {
+const execute = createExecuter(cliPath, {
   env: {
     SKAL_TEST_BASE_PATH: basePath,
   },
-};
-const execute = (args: string[], inputs: string[] = []) => {
-  return executeWithInput(cliPath, args, inputs, executeOptions);
-};
-const exists = createRelativeExistsCheck(basePath);
+});
 
 function cleanup() {
   if (fs.existsSync(basePath)) {
@@ -34,46 +29,38 @@ afterAll(cleanup);
 
 test('shows help text with --help flag', async () => {
   const response = await execute(['--help']);
-
-  const output = splitByEOL(response);
-  expect(output).toEqual(
-    expect.arrayContaining([
-      expect.stringContaining('Manage separate shell configurations'),
-      expect.stringContaining('Usage'),
-      expect.stringContaining('Commands'),
-      expect.stringContaining('Options'),
-    ])
-  );
+  expect(response).toContain('Manage separate shell configurations');
+  expect(response).toContain('Usage');
+  expect(response).toContain('Commands');
+  expect(response).toContain('Options');
 });
 
 describe('initialization', () => {
   test('is triggered on the first run', async () => {
     const response = await execute([], [Keys.ENTER]);
-
     expect(response).toContain('looks like this is your first time using Skal');
     expect(response).toContain(basePath);
     expect(response).toMatch(/what editor do you use?.*vi/im);
   });
 
   test('creates expected files', () => {
-    expect(exists()).toBe(true);
-    expect(exists('config.json')).toBe(true);
-    expect(exists('profiles/default')).toBe(true);
-    expect(exists('active')).toBe(true);
+    expect(fs.existsSync(basePath)).toBe(true);
+    expect(fs.existsSync(relativeTo(basePath, 'config.json'))).toBe(true);
+    expect(fs.existsSync(relativeTo(basePath, 'profiles/default'))).toBe(true);
+    expect(fs.existsSync(relativeTo(basePath, 'active'))).toBe(true);
   });
 });
 
 describe('new command', () => {
   test('prompts for profile name', async () => {
     const response = await execute(['new'], ['work', Keys.ENTER]);
-
     expect(response).toContain('Profile name: work');
     expect(response).toContain('Created new profile here:');
     expect(response).toContain(path.join(basePath, 'profiles/work'));
   });
 
   test('created expected file', () => {
-    expect(exists('profiles/work')).toBe(true);
+    expect(fs.existsSync(relativeTo(basePath, 'profiles/work'))).toBe(true);
   });
 
   test('prevents duplicate profile names', async () => {
@@ -88,7 +75,6 @@ describe('new command', () => {
 describe('list command', () => {
   test('lists available profiles', async () => {
     const response = await execute(['list']);
-
     expect(response).toContain('Profiles:');
     expect(response).toContain('default (active)');
     expect(response).toContain('work');
@@ -118,9 +104,7 @@ describe('switch command', () => {
     append(path.join(basePath, 'profiles/work'), workContent);
 
     expect(read(activePath)).not.toContain(workContent);
-
     const response = await execute([], [Keys.DOWN, Keys.ENTER]);
-
     expect(response).toContain('Activated profile: work');
     expect(response).not.toMatch(/Ran \d hook/im);
     expect(read(activePath)).toContain(workContent);
@@ -143,7 +127,6 @@ describe('switch command', () => {
     write(configPath, JSON.stringify(config, null, '  '));
 
     const response = await execute([], [Keys.ENTER]);
-
     expect(response).toContain('Ran 2 hooks.');
     expect(response).toContain('Activated profile: default');
   });

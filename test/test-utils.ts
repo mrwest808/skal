@@ -1,4 +1,3 @@
-import { EOL } from 'os';
 import path from 'path';
 import { spawn } from 'child_process';
 import fs from 'fs-extra';
@@ -12,6 +11,9 @@ interface EnvironmentVariables {
   [key: string]: string;
 }
 
+/**
+ * https://gist.github.com/zorrodg/c349cf54a3f6d0a9ba62e0f4066f31cb
+ */
 export function createProcess(
   processPath: string,
   args: string[] = [],
@@ -87,6 +89,12 @@ export function executeWithInput(
   return promise;
 }
 
+export function createExecuter(processPath: string, opts: ExecuteOptions = {}) {
+  return (args: string[], inputs: string[] = []) => {
+    return executeWithInput(processPath, args, inputs, opts);
+  };
+}
+
 export enum Keys {
   DOWN = '\x1B\x5B\x42',
   UP = '\x1B\x5B\x41',
@@ -94,12 +102,6 @@ export enum Keys {
   SPACE = '\x20',
 }
 
-export function splitByEOL(str: string) {
-  return str.trim().split(EOL);
-}
-
-export function createRelativeExistsCheck(filePath: string) {
-  return (...paths: string[]) => {
-    return fs.existsSync(path.join(filePath, ...paths));
-  };
+export function relativeTo(filePath: string, ...paths: string[]) {
+  return path.join(filePath, ...paths);
 }
