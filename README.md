@@ -20,34 +20,37 @@ Run `skal` in your terminal to initialize, follow the instructions.
 
 Create and manage profiles under `$HOME/.skal/profiles`, use `skal` to switch between them.
 
-![GIF showing terminal usage](https://user-images.githubusercontent.com/6108538/52310924-673e7580-29a5-11e9-90ae-1ec0ebf2e07b.gif)
+![GIF showing terminal usage](https://user-images.githubusercontent.com/6108538/64895855-1c44b900-d67e-11e9-92f3-593adf58e9a1.gif)
 
 ```sh
 $ skal --help
 
-  Manage shell profiles.
+  Manage separate shell configurations with ease.
 
   Usage
-    $ skal [<option>]
+    $ skal [<command>]
+
+  Commands
+    new         Create a new profile
+    list        List available profiles
+    which       Print path to active profile
+    config      Print path to config file
+    edit        Edit profile or configuration
+
+    Run without arguments for an interactive prompt to switch active profile.
 
   Options
-    --new, -n       Create a new profile
-    --list, -l      List available profiles
-    --config, -c    Edit configuration
-    --edit, -e      Select and edit profile
-
-  Examples
-    $ skal          Interactive prompt to change active profile
-    $ skal --list
+    --help      Show help
+    --version   Print version
 ```
 
 ## Configuration
 
-Configure by editing the `$HOME/.skal/config.json` file, or just run `skal -c`.
+Configure by editing the `$HOME/.skal/config.json` file.
 
 ### `editor`
 
-Used as a convenience together with the `--config` and `--edit` options. Opens configuration or profiles in your editor of choice.
+Used as a convenience together with the `edit` command. Opens configuration or profiles in your editor of choice.
 
 Put the command name you use in your terminal to open your preferred editor.
 

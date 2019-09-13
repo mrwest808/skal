@@ -12,8 +12,6 @@ import {
 
 const cli = meow(
   `
-  Manage shell profiles.
-
   Usage
     $ skal [<command>]
 
