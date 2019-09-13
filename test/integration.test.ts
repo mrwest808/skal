@@ -38,7 +38,7 @@ test('shows help text with --help flag', async () => {
   const output = splitByEOL(response);
   expect(output).toEqual(
     expect.arrayContaining([
-      expect.stringContaining('Manage shell profiles'),
+      expect.stringContaining('Manage separate shell configurations'),
       expect.stringContaining('Usage'),
       expect.stringContaining('Commands'),
       expect.stringContaining('Options'),
