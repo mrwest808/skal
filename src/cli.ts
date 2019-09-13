@@ -59,7 +59,7 @@ const isTestMode =
 
 const effects: Effects = {
   async execCommand(cmd) {
-    return execa.shell(cmd);
+    return execa.command(cmd, { shell: true });
   },
   openEditor(editor: Editor, filePath: string) {
     if (isTestMode) {
