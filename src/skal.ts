@@ -335,7 +335,7 @@ export default class Skal {
         activeProfile: {
           type: 'string',
         },
-        isInitialized: {
+        initialized: {
           type: 'boolean',
         },
       },
