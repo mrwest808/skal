@@ -35,13 +35,13 @@ const reporter: Reporter = {
       "It looks like this is your first time using Skal, let's set things up!\n";
     log(message);
   },
-  initializeDone(paths) {
+  initializeDone(profilesPath, symlinkPath) {
     const message = outdent.string(`
       Created a default profile here:
-        ${paths.profiles}
+        ${profilesPath}
 
       Include this file in your shell config file:
-        ${paths.symlink}
+        ${symlinkPath}
       
       (example how this could look in a .zshrc file)
         source "$HOME/.skal/active"

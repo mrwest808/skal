@@ -1,0 +1,7 @@
+{
+  "editor": "vi",
+  "hooks": {
+    "onSwitchFrom": {},
+    "onSwitchTo": {}
+  }
+}

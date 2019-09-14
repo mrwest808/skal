@@ -61,7 +61,8 @@ typings/
 .next
 
 # Built files
-dist/
+/dist/
+/lib/
 
 # Misc
 /*.todo

@@ -1,15 +1,17 @@
 {
   "compilerOptions": {
-    "allowJs": true,
+    "allowJs": false,
     "allowSyntheticDefaultImports": true,
     "baseUrl": "./",
+    "esModuleInterop": true,
     "jsx": "preserve",
-    "lib": ["dom", "es2017"],
-    "module": "esnext",
+    "module": "commonjs",
     "moduleResolution": "node",
-    "noEmit": true,
+    "noEmit": false,
+    "noImplicitAny": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "outDir": "lib",
     "paths": {
       "*": ["types/*"]
     },
@@ -19,6 +21,8 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "target": "esnext"
-  }
+    "strictNullChecks": false,
+    "target": "es2015"
+  },
+  "include": ["src/*.ts"]
 }

@@ -9,6 +9,7 @@ import {
   CliRunnerEffects as Effects,
   Editor,
 } from './types';
+import { __TEST__, __SKAL_TEST_BASE_PATH__ } from './utils';
 
 const cli = meow(
   `
@@ -51,15 +52,12 @@ switch (command) {
     break;
 }
 
-const isTestMode =
-  process.env.NODE_ENV === 'test' && process.env.SKAL_TEST_BASE_PATH;
-
 const effects: Effects = {
   async execCommand(cmd) {
     return execa.command(cmd, { shell: true });
   },
   openEditor(editor: Editor, filePath: string) {
-    if (isTestMode) {
+    if (__TEST__) {
       console.log('%s %s', editor, filePath);
       return;
     }
@@ -77,7 +75,7 @@ const effects: Effects = {
 
 const cliRunner = new CliRunner({
   action,
-  basePath: isTestMode ? process.env.SKAL_TEST_BASE_PATH : undefined,
+  basePath: __TEST__ ? __SKAL_TEST_BASE_PATH__ : undefined,
   effects,
   reporter: consoleReporter,
 });

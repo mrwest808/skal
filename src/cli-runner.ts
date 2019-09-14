@@ -1,4 +1,3 @@
-import path from 'path';
 import Skal from './skal';
 import { errors } from './errors';
 import {
@@ -6,7 +5,6 @@ import {
   CliRunnerEffects as Effects,
   CliRunnerOptions,
   Reporter,
-  Editor,
 } from './types';
 
 export default class CliRunner {
@@ -17,8 +15,7 @@ export default class CliRunner {
   private reporter: Reporter;
 
   constructor(opts: CliRunnerOptions) {
-    const skalOpts = opts.basePath ? { basePath: opts.basePath } : undefined;
-    const skal = new Skal(skalOpts);
+    const skal = new Skal(opts.basePath);
     const action = !skal.initialized ? Action.Initialize : opts.action;
 
     this.skal = skal;
@@ -73,14 +70,16 @@ export default class CliRunner {
       },
     ];
 
-    let answers: { editor: Editor };
-    answers = await this.effects.prompt(questions);
+    const answers = await this.effects.prompt(questions);
     this.skal.initialize(answers.editor);
-    this.reporter.initializeDone(this.skal.paths);
+    this.reporter.initializeDone(
+      this.skal.getPath(Skal.Path.Profiles),
+      this.skal.getPath(Skal.Path.Symlink)
+    );
   }
 
-  private async listProfiles() {
-    const profiles = await this.skal.listProfiles();
+  private listProfiles() {
+    const profiles = this.skal.listAvailableProfiles();
 
     if (!profiles.length) {
       throw errors.noProfiles();
@@ -90,17 +89,17 @@ export default class CliRunner {
   }
 
   private whichProfile() {
-    const activeProfile = this.skal.activeProfile as string;
-    const activeProfilePath = path.join(
-      this.skal.paths.profiles,
+    const activeProfile = this.skal.activeProfile;
+    const activeProfilePath = this.skal.getPath(
+      Skal.Path.Profiles,
       activeProfile
     );
     this.reporter.whichProfileDone(activeProfile, activeProfilePath);
   }
 
   private async edit() {
-    const configPath = this.skal.paths.config;
-    const profiles = await this.skal.listProfiles();
+    const configPath = this.skal.getPath(Skal.Path.Config);
+    const profiles = this.skal.listAvailableProfiles();
     const questions = [
       {
         type: 'list',
@@ -113,7 +112,7 @@ export default class CliRunner {
               profile === this.skal.activeProfile
                 ? `profiles/${profile} (active)`
                 : `profiles/${profile}`,
-            value: path.join(this.skal.paths.profiles, profile),
+            value: this.skal.getPath(Skal.Path.Profiles, profile),
           })),
         ],
       },
@@ -135,12 +134,12 @@ export default class CliRunner {
 
     let answers: { name: string };
     answers = await this.effects.prompt(questions);
-    const filePath = this.skal.createProfile(answers.name);
+    const filePath = this.skal.newProfile(answers.name);
     this.reporter.newProfileDone(filePath);
   }
 
   private async selectProfile() {
-    const profiles = await this.skal.listProfiles();
+    const profiles = this.skal.listAvailableProfiles();
     const questions = [
       {
         type: 'list',
@@ -158,7 +157,7 @@ export default class CliRunner {
 
     let answers: { selected: string };
     answers = await this.effects.prompt(questions);
-    const commands = await this.skal.activateProfile(answers.selected);
+    const commands = this.skal.switchActiveProfile(answers.selected);
 
     for (let i = 0; i < commands.length; i++) {
       await this.effects.execCommand(commands[i]);
@@ -168,10 +167,10 @@ export default class CliRunner {
   }
 
   private openEditor(filePath: string) {
-    if (!this.skal.activeEditor) {
+    if (!this.skal.editor) {
       throw errors.noActiveEditor();
     }
 
-    this.effects.openEditor(this.skal.activeEditor, filePath);
+    this.effects.openEditor(this.skal.editor, filePath);
   }
 }

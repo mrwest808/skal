@@ -1,251 +1,358 @@
 import os from 'os';
-import path from 'path';
 import fs from 'fs-extra';
-import globby from 'globby';
-import Joi from 'joi';
+import path from 'path';
+import Conf from 'conf';
 import { errors } from './errors';
-import schemas from './schemas';
-import {
-  Config,
-  Editor,
-  ConstructorOptions,
-  InternalOptions,
-  Paths,
-} from './types';
+import { Commands, Hooks, Editor } from './types';
+import { __TEST__ } from './utils';
 
-const defaultOptions = {
+enum SkalPath {
+  Base,
+  Config,
+  Profiles,
+  Symlink,
+}
+
+const defaults = {
   basePath: path.join(os.homedir(), '.skal'),
 };
 
+// TODO Better & more explicit errors
+// TODO Recover logic
 export default class Skal {
-  public initialized = false;
-  public config?: Config;
-  public paths: Paths;
-  public activeEditor?: Editor;
-  public activeProfile?: string;
+  static Path = SkalPath;
 
-  private internalOptions?: InternalOptions;
+  readonly basePath: string;
 
-  constructor(options: ConstructorOptions = defaultOptions) {
-    const basePath = options.basePath;
-    const configPath = path.join(basePath, 'config.json');
-    const internalPath = path.join(basePath, 'internal');
-    const profilesPath = path.join(basePath, 'profiles');
-    const symlinkPath = path.join(basePath, 'active');
-    const internalOptionsPath = path.join(internalPath, '_options.json');
+  private config?: Conf;
+  private internalOptions?: Conf;
 
-    this.paths = {
-      base: basePath,
-      config: configPath,
-      internal: internalPath,
-      internalOptions: internalOptionsPath,
-      profiles: profilesPath,
-      symlink: symlinkPath,
-    };
-
-    // Already initialized
-    if (fs.existsSync(basePath)) {
-      this.validateFileStructure();
-      const internalOptions = this.validateInternalOptions();
-      const config = this.validateConfig();
-      this.populateProperties(config, internalOptions);
-    }
+  constructor(basePath: string = defaults.basePath) {
+    this.basePath = basePath;
   }
 
-  /**
-   * Public methods
-   */
+  get initialized(): boolean {
+    const initialized = this.getInternalOptionValue<boolean>('initialized');
 
-  public initialize = (editor: Editor) => {
-    if (!editor) {
-      throw errors.missingEditor();
+    if (typeof initialized === 'undefined') {
+      return this.tryMigratingFromOldFileStructure();
     }
 
-    fs.ensureDirSync(this.paths.internal);
-    fs.ensureDirSync(this.paths.profiles);
+    return initialized;
+  }
 
-    const internalOptions = { activeProfile: 'default' };
-    const initialConfig = {
-      editor,
-      hooks: { onSwitchFrom: {}, onSwitchTo: {} },
-    };
+  get activeProfile() {
+    return this.getInternalOptionValue<string>('activeProfile');
+  }
 
-    const defaultProfilePath = path.join(this.paths.profiles, `default`);
+  get editor() {
+    return this.getConfigValue<string>('editor');
+  }
 
-    this.createDefaultProfile(defaultProfilePath);
+  private get oldConfigPath() {
+    return this.getPath(SkalPath.Base, 'config.json');
+  }
+
+  private get oldInternalOptionsPath() {
+    return this.getPath(SkalPath.Base, 'internal/_options.json');
+  }
+
+  // Public Methods
+  // ====================================
+
+  public initialize(editor: Editor = 'vi') {
+    const profilesPath = this.getPath(SkalPath.Profiles);
+    const defaultProfilePath = path.join(profilesPath, 'default');
+
+    fs.ensureDirSync(profilesPath);
+    fs.writeFileSync(defaultProfilePath, '', 'utf-8');
+
     this.createSymlink(defaultProfilePath);
-    this.writeInternalOptions(internalOptions);
-    this.writeConfig(initialConfig);
-    this.populateProperties(initialConfig, internalOptions);
-  };
-
-  public async listProfiles(): Promise<string[]> {
-    const pattern = `*`;
-    const profiles = await globby(pattern, {
-      cwd: this.paths.profiles,
+    this.initializeInternalOptions({
+      activeProfile: 'default',
+      initialized: true,
     });
-    profiles.sort();
-    return profiles;
+    this.initializeConfig({
+      editor,
+      hooks: {
+        onSwitchFrom: {},
+        onSwitchTo: {},
+      },
+    });
   }
 
-  public createProfile(name: string): string {
-    const filePath = path.join(this.paths.profiles, name);
+  public listAvailableProfiles(): string[] {
+    return fs.readdirSync(this.getPath(SkalPath.Profiles));
+  }
 
-    if (fs.existsSync(filePath)) {
-      const error = new Error(`Profile already exists: ${name}`);
+  public newProfile(profileName: string): string {
+    const newProfilePath = this.getPath(SkalPath.Profiles, profileName);
+
+    if (fs.existsSync(newProfilePath)) {
+      const error = new Error(`Profile already exists: ${profileName}`);
       throw errors.duplicateProfile(error);
     }
 
     try {
-      fs.writeFileSync(filePath, '', 'utf8');
+      fs.writeFileSync(newProfilePath, '', 'utf8');
+      return newProfilePath;
     } catch (error) {
-      throw errors.badProfileWrite(error);
+      throw error;
     }
-
-    return filePath;
   }
 
-  public async activateProfile(profile: string): Promise<string[]> {
-    if (profile === this.activeProfile) {
-      const error = new Error(`Profile already active (${profile})`);
+  public switchActiveProfile(profileName: string) {
+    const currentlyActiveProfile = this.activeProfile;
+
+    if (currentlyActiveProfile === profileName) {
+      const error = new Error(`Profile already active (${profileName})`);
       throw errors.profileAlreadyActive(error);
     }
 
-    const profiles = await this.listProfiles();
+    const profilePath = this.getPath(SkalPath.Profiles, profileName);
 
-    if (!profiles.includes(profile)) {
-      const error = new Error(`Could not find profile: ${profile}`);
+    if (!fs.existsSync(profilePath)) {
+      const error = new Error(`Could not find profile: ${profileName}`);
       throw errors.missingProfile(error);
     }
 
-    const fileName = profile;
-    const profilePath = path.join(this.paths.profiles, fileName);
-    const lastProfile = this.activeProfile;
-
-    this.setInternalOption('activeProfile', profile);
+    this.setInternalOptionValue('activeProfile', profileName);
     this.createSymlink(profilePath);
-    this.activeProfile = profile;
 
-    return this.getHooksCommands(lastProfile as string, profile);
+    return this.getHookCommands(currentlyActiveProfile, profileName);
   }
 
-  /**
-   * Private methods
-   */
+  public getPath(location: SkalPath, ...filePaths: string[]): string {
+    let filePath;
 
-  private populateProperties(config: Config, internalOptions: InternalOptions) {
-    this.initialized = true;
-    this.config = config;
-    this.activeEditor = config.editor;
-    this.activeProfile = internalOptions.activeProfile;
-    this.internalOptions = internalOptions;
+    switch (location) {
+      case SkalPath.Base:
+        filePath = this.basePath;
+        break;
+
+      case SkalPath.Config:
+        if (!this.config) {
+          this.initializeConfig();
+        }
+        filePath = (this.config as Conf).path;
+        break;
+
+      case SkalPath.Profiles:
+        filePath = path.join(this.basePath, 'profiles');
+        break;
+
+      case SkalPath.Symlink:
+        filePath = path.join(this.basePath, 'active');
+        break;
+    }
+
+    if (filePaths && filePaths.length) {
+      filePath = path.join(filePath as string, ...filePaths);
+    }
+
+    return filePath as string;
   }
+
+  // Private Methods
+  // ====================================
 
   private createSymlink(srcPath: string) {
-    if (fs.existsSync(this.paths.symlink)) {
-      fs.removeSync(this.paths.symlink);
+    const symlinkPath = this.getPath(SkalPath.Symlink);
+
+    if (fs.existsSync(symlinkPath)) {
+      fs.removeSync(symlinkPath);
     }
 
-    fs.ensureSymlinkSync(srcPath, this.paths.symlink, 'file');
+    fs.ensureSymlinkSync(srcPath, symlinkPath, 'file');
   }
 
-  private createDefaultProfile(profilePath: string) {
+  private getHookCommands(fromProfile: string, toProfile: string): Commands {
+    const hooks = this.getConfigValue<Hooks>('hooks');
+    const fromHooks = hooks.onSwitchFrom[fromProfile] || [];
+    const wildcardFromHooks = hooks.onSwitchFrom['*'] || [];
+    const toHooks = hooks.onSwitchTo[toProfile] || [];
+    const wildcardToHooks = hooks.onSwitchTo['*'] || [];
+
+    return fromHooks.concat(wildcardFromHooks, toHooks, wildcardToHooks);
+  }
+
+  private getConfigValue<T>(key: string): T {
     try {
-      fs.writeFileSync(profilePath, '', 'utf8');
-    } catch (error) {
-      throw errors.badDefaultProfileWrite(error);
-    }
-  }
-
-  private writeInternalOptions(opts: InternalOptions) {
-    try {
-      const jsonString = JSON.stringify(opts, null, '  ');
-      fs.ensureFileSync(this.paths.internalOptions);
-      fs.writeFileSync(this.paths.internalOptions, jsonString, 'utf8');
-    } catch (error) {
-      throw errors.badInternalOptionsWrite(error);
-    }
-  }
-
-  private writeConfig(config: Config) {
-    try {
-      const jsonString = JSON.stringify(config, null, '  ');
-      fs.ensureFileSync(this.paths.config);
-      fs.writeFileSync(this.paths.config, jsonString, 'utf8');
-    } catch (error) {
-      throw errors.badConfigWrite(error);
-    }
-  }
-
-  private validateFileStructure(): void {
-    Object.entries(this.paths).forEach(([_, filePath]) => {
-      if (!fs.existsSync(filePath)) {
-        const error = new Error(`Missing file: ${filePath}`);
-        throw errors.badFileStructure(error);
+      if (!this.config) {
+        this.initializeConfig();
       }
+
+      let value = (this.config as Conf).get(key);
+
+      if (typeof value === 'undefined') {
+        value = this.tryMigratingOldConfig<T>(key);
+      }
+
+      return value;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private getInternalOptionValue<T>(key: string): T {
+    try {
+      if (!this.internalOptions) {
+        this.initializeInternalOptions();
+      }
+
+      let value = (this.internalOptions as Conf).get(key);
+
+      if (typeof value === 'undefined') {
+        value = this.tryMigratingOldInternalOptions<T>(key);
+      }
+
+      return value;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private setInternalOptionValue(key: string, value: any) {
+    try {
+      if (!this.config) {
+        this.initializeInternalOptions();
+      }
+
+      (this.internalOptions as Conf).set(key, value);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private tryMigratingOldConfig<T>(key?: string): T | undefined {
+    if (!fs.existsSync(this.oldConfigPath)) {
+      return;
+    }
+
+    try {
+      const jsonString = fs.readFileSync(this.oldConfigPath, 'utf-8');
+      const json = JSON.parse(jsonString);
+      if (!this.config) this.initializeConfig();
+      (this.config as Conf).set(json);
+
+      if (key) {
+        return json[key];
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private tryMigratingOldInternalOptions<T>(key?: string): T | undefined {
+    if (!fs.existsSync(this.oldInternalOptionsPath)) {
+      return;
+    }
+
+    try {
+      const jsonString = fs.readFileSync(this.oldInternalOptionsPath, 'utf-8');
+      const json = JSON.parse(jsonString);
+      if (!this.internalOptions) this.initializeInternalOptions();
+      (this.internalOptions as Conf).set(json);
+
+      if (key) {
+        return json[key];
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private tryMigratingFromOldFileStructure(): boolean {
+    if (
+      !fs.existsSync(this.oldConfigPath) ||
+      !fs.existsSync(this.oldInternalOptionsPath)
+    ) {
+      return false;
+    }
+
+    try {
+      this.tryMigratingOldConfig();
+      this.tryMigratingOldInternalOptions();
+      this.setInternalOptionValue('initialized', true);
+      return true;
+    } catch (error) {
+      // TODO Maybe throw an error here..
+      return false;
+    }
+  }
+
+  private initializeConfig(initialValue?: object) {
+    this.config = new Conf({
+      ...this.getExtraConfOptions(),
+      projectName: 'skal',
+      configName: 'config',
+      clearInvalidConfig: false,
+      schema: {
+        editor: {
+          type: 'string',
+        },
+        hooks: {
+          type: 'object',
+          properties: {
+            onSwitchFrom: {
+              type: 'object',
+              additionalProperties: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+            },
+            onSwitchTo: {
+              type: 'object',
+              additionalProperties: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+          required: ['onSwitchFrom', 'onSwitchTo'],
+        },
+      },
     });
+
+    if (initialValue) {
+      this.config.set(initialValue);
+    }
   }
 
-  private validateConfig(): Config {
-    let config;
+  private initializeInternalOptions(initialValue?: object) {
+    this.internalOptions = new Conf({
+      ...this.getExtraConfOptions(),
+      projectName: 'skal',
+      configName: '_internalOptions',
+      clearInvalidConfig: false,
+      schema: {
+        activeProfile: {
+          type: 'string',
+        },
+        isInitialized: {
+          type: 'boolean',
+        },
+      },
+    });
 
-    try {
-      config = require(this.paths.config);
-    } catch (error) {
-      throw errors.badConfigRead(error);
+    if (initialValue) {
+      this.internalOptions.set(initialValue);
     }
-
-    const validationResult = Joi.validate(config, schemas.config);
-
-    if (validationResult.error) {
-      throw errors.badConfigFormat(validationResult.error);
-    }
-
-    return config;
   }
 
-  private validateInternalOptions(): InternalOptions {
-    let options;
+  private getExtraConfOptions() {
+    let options: { cwd?: string } = {};
 
-    try {
-      options = require(this.paths.internalOptions);
-    } catch (error) {
-      throw errors.badInternalOptionsRead(error);
-    }
-
-    const validationResult = Joi.validate(options, schemas.internalOptions);
-
-    if (validationResult.error) {
-      throw errors.badInternalOptionsFormat(validationResult.error);
+    // When running integration tests Conf:s files needs
+    // to be stored inside the SkalPath.Base folder
+    if (__TEST__) {
+      options.cwd = this.getPath(SkalPath.Base, '__conf__');
     }
 
     return options;
-  }
-
-  private setInternalOption(key: string, value: any) {
-    const newInternalOptions = Object.assign({}, this.internalOptions, {
-      [key]: value,
-    });
-    this.writeInternalOptions(newInternalOptions);
-    this.internalOptions = newInternalOptions;
-  }
-
-  private getHooksCommands(from: string, to: string): string[] {
-    if (!this.config) {
-      throw errors.hooksNoConfig();
-    }
-
-    const { hooks } = this.config;
-    const wildcardFromHooks = hooks.onSwitchFrom['*'] || [];
-    const fromHooks = hooks.onSwitchFrom[from] || [];
-    const wildcardToHooks = hooks.onSwitchTo['*'] || [];
-    const toHooks = hooks.onSwitchTo[to] || [];
-    const commands = wildcardFromHooks.concat(
-      fromHooks,
-      wildcardToHooks,
-      toHooks
-    );
-
-    return commands;
   }
 }

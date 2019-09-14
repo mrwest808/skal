@@ -1,4 +1,4 @@
-import { Questions } from 'inquirer';
+import { Question } from 'inquirer';
 import { CustomError } from './errors';
 
 export type Editor = string;
@@ -13,8 +13,10 @@ export interface Hooks {
   onSwitchTo: HookMap;
 }
 
+export type Commands = string[];
+
 export interface HookMap {
-  [profileName: string]: string[];
+  [profileName: string]: Commands;
 }
 
 export interface HookCmdObject {
@@ -51,13 +53,13 @@ export enum CliRunnerAction {
 export interface CliRunnerEffects {
   execCommand: (cmd: string) => Promise<any>;
   openEditor: (editor: Editor, filePath: string) => void;
-  prompt: (questions: Questions<any>) => Promise<any>;
+  prompt: (questions: Question<any>[]) => Promise<any>;
 }
 
 export interface Reporter {
   runError: (error: CustomError | Error) => void;
   initializeIntro: () => void;
-  initializeDone: (paths: Paths) => void;
+  initializeDone: (profilesPath: string, symlinkPath: string) => void;
   listProfilesDone: (profiles: string[], active?: string) => void;
   newProfileDone: (filePath: string) => void;
   selectProfileDone: (profile: string, commands: string[]) => void;
