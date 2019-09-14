@@ -57,6 +57,7 @@ export default class Skal {
     return this.getPath(SkalPath.Base, 'internal/_options.json');
   }
 
+  //
   // Public Methods
   // ====================================
 
@@ -153,6 +154,7 @@ export default class Skal {
     return filePath as string;
   }
 
+  //
   // Private Methods
   // ====================================
 

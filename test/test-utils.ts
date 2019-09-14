@@ -1,4 +1,3 @@
-import path from 'path';
 import { spawn } from 'child_process';
 import fs from 'fs-extra';
 import concat from 'concat-stream';
@@ -101,8 +100,4 @@ export enum Keys {
   UP = '\x1B\x5B\x41',
   ENTER = '\x0D',
   SPACE = '\x20',
-}
-
-export function relativeTo(filePath: string, ...paths: string[]) {
-  return path.join(filePath, ...paths);
 }

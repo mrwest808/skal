@@ -4,7 +4,6 @@ import fs from 'fs-extra';
 import {
   Keys,
   createExecuter,
-  relativeTo,
   read,
   write,
   append,
@@ -46,8 +45,8 @@ describe('first run', () => {
 
   test('initialization creates expected files', () => {
     expect(exists(basePath)).toBe(true);
-    expect(exists(relativeTo(basePath, 'profiles/default'))).toBe(true);
-    expect(exists(relativeTo(basePath, 'active'))).toBe(true);
+    expect(exists(path.join(basePath, 'profiles/default'))).toBe(true);
+    expect(exists(path.join(basePath, 'active'))).toBe(true);
   });
 
   test('<new> command prompts for profile name', async () => {
@@ -58,7 +57,7 @@ describe('first run', () => {
   });
 
   test('<new> command creates expected file', () => {
-    expect(exists(relativeTo(basePath, 'profiles/work'))).toBe(true);
+    expect(exists(path.join(basePath, 'profiles/work'))).toBe(true);
   });
 
   test('<new> command prevents duplicate profile names', async () => {
@@ -132,8 +131,8 @@ describe('upgrading from 0.3 to 0.4', () => {
     cleanup();
     fs.copySync(path.resolve(__dirname, 'fixtures/v0.3'), basePath);
     fs.ensureSymlinkSync(
-      relativeTo(basePath, 'profiles/work'),
-      relativeTo(basePath, 'active')
+      path.join(basePath, 'profiles/work'),
+      path.join(basePath, 'active')
     );
   }
 
@@ -147,7 +146,7 @@ describe('upgrading from 0.3 to 0.4', () => {
   afterAll(cleanup);
 
   test('should initially have an outdated file structure', () => {
-    expect(exists(relativeTo(basePath, '__conf__'))).toBe(false);
+    expect(exists(path.join(basePath, '__conf__'))).toBe(false);
   });
 
   test('should avoid new initialization', async () => {
@@ -160,7 +159,7 @@ describe('upgrading from 0.3 to 0.4', () => {
   });
 
   test('migrates old configuration and internal options', async () => {
-    expect(exists(relativeTo(basePath, '__conf__'))).toBe(true);
+    expect(exists(path.join(basePath, '__conf__'))).toBe(true);
   });
 });
 
