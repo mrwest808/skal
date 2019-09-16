@@ -1,20 +1,10 @@
 import path from 'path';
 import Conf from 'conf';
 
-enum StoreType {
-  InternalOptions,
-  UserConfig,
-}
+abstract class PersistentStore {
+  protected cwd?: string;
 
-export default class PersistentStore {
-  static Type = StoreType;
-
-  private type: StoreType;
-  private cwd?: string;
-  private instance?: Conf;
-
-  constructor(type: StoreType, cwd?: string) {
-    this.type = type;
+  constructor(cwd?: string) {
     this.cwd = cwd;
   }
 
@@ -38,25 +28,31 @@ export default class PersistentStore {
     return instance.path;
   }
 
-  private getStoreInstance(): Conf {
+  abstract getStoreInstance(): Conf;
+
+  protected getExtraInstantiationOptions(): object {
+    let options: { cwd?: string } = {};
+
+    // When running integration tests Conf:s files needs
+    // to be stored inside the <Skal base path> folder
+    if (this.cwd) {
+      options.cwd = path.join(this.cwd, '__conf__');
+    }
+
+    return options;
+  }
+}
+
+export class InternalOptionsStore extends PersistentStore {
+  private instance: Conf;
+
+  getStoreInstance(): Conf {
     if (this.instance) {
       return this.instance;
     }
 
-    switch (this.type) {
-      case StoreType.InternalOptions:
-        this.instance = this.instantiateInternalOptions();
-
-      case StoreType.UserConfig:
-        this.instance = this.instantiateUserConfig();
-    }
-
-    return this.instance;
-  }
-
-  private instantiateInternalOptions(): Conf {
     return new Conf({
-      ...this.getExtraInstantiateOptions(),
+      ...this.getExtraInstantiationOptions(),
       projectName: 'skal',
       configName: '_internalOptions',
       clearInvalidConfig: false,
@@ -70,10 +66,18 @@ export default class PersistentStore {
       },
     });
   }
+}
 
-  private instantiateUserConfig(): Conf {
+export class UserConfigStore extends PersistentStore {
+  private instance: Conf;
+
+  getStoreInstance(): Conf {
+    if (this.instance) {
+      return this.instance;
+    }
+
     return new Conf({
-      ...this.getExtraInstantiateOptions(),
+      ...this.getExtraInstantiationOptions(),
       projectName: 'skal',
       configName: 'config',
       clearInvalidConfig: false,
@@ -107,17 +111,5 @@ export default class PersistentStore {
         },
       },
     });
-  }
-
-  private getExtraInstantiateOptions(): object {
-    let options: { cwd?: string } = {};
-
-    // When running integration tests Conf:s files needs
-    // to be stored inside the <Skal base path> folder
-    if (this.cwd) {
-      options.cwd = path.join(this.cwd, '__conf__');
-    }
-
-    return options;
   }
 }

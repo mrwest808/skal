@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { errors } from './errors';
 import { Commands, Hooks, Editor } from './types';
 import { __TEST__ } from './utils';
-import PersistentStore from './persistent-store';
+import { InternalOptionsStore, UserConfigStore } from './persistent-store';
 import Paths from './paths';
 
 enum SkalPath {
@@ -18,13 +18,13 @@ export default class Skal {
   static Path = SkalPath;
 
   private paths: Paths;
-  private internalOptions: PersistentStore;
-  private userConfig: PersistentStore;
+  private internalOptions: InternalOptionsStore;
+  private userConfig: UserConfigStore;
 
   constructor(
     paths: Paths,
-    internalOptions: PersistentStore,
-    userConfig: PersistentStore
+    internalOptions: InternalOptionsStore,
+    userConfig: UserConfigStore
   ) {
     this.paths = paths;
     this.internalOptions = internalOptions;
@@ -148,21 +148,11 @@ export default class Skal {
 
   private getConfigValue<T>(key: string): T {
     let value = this.userConfig.get<T>(key);
-
-    if (typeof value === 'undefined') {
-      value = this.tryMigratingOldConfig<T>(key);
-    }
-
     return value;
   }
 
   private getInternalOptionValue<T>(key: string): T {
     let value = this.internalOptions.get<T>(key);
-
-    if (typeof value === 'undefined') {
-      value = this.tryMigratingOldInternalOptions<T>(key);
-    }
-
     return value;
   }
 

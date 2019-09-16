@@ -3,7 +3,7 @@ import path from 'path';
 import Skal from './skal';
 import { errors } from './errors';
 import Paths from './paths';
-import PersistentStore from './persistent-store';
+import { InternalOptionsStore, UserConfigStore } from './persistent-store';
 import {
   CliRunnerAction as Action,
   CliRunnerEffects as Effects,
@@ -20,7 +20,7 @@ export default class CliRunner {
   public readonly action: Action;
 
   private paths: Paths;
-  private userConfig: PersistentStore;
+  private userConfig: UserConfigStore;
   private skal: Skal;
   private effects: Effects;
   private reporter: Reporter;
@@ -28,12 +28,10 @@ export default class CliRunner {
   constructor(opts: CliRunnerOptions) {
     const basePath = opts.basePath || defaults.basePath;
     const paths = new Paths(basePath);
-    const internalOptionsStore = new PersistentStore(
-      PersistentStore.Type.InternalOptions,
+    const internalOptionsStore = new InternalOptionsStore(
       __TEST__ ? basePath : undefined
     );
-    const userConfigStore = new PersistentStore(
-      PersistentStore.Type.UserConfig,
+    const userConfigStore = new UserConfigStore(
       __TEST__ ? basePath : undefined
     );
     const skal = new Skal(paths, internalOptionsStore, userConfigStore);
