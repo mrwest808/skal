@@ -1,7 +1,7 @@
 {
   "name": "skal",
   "description": "Manage separate shell configurations with ease.",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "repository": "git@github.com:mrwest808/skal.git",
   "author": "Johan <johan.west@viablelab.se>",
   "license": "MIT",
