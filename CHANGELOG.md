@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.3](https://github.com/mrwest808/skal/compare/v0.4.2...v0.4.3) (2019-09-16)
+
+
+### Bug Fixes
+
+* ensure internalOptions & userConfig point to separate files ([f82e1fe](https://github.com/mrwest808/skal/commit/f82e1fe))
+
 ### [0.4.2](https://github.com/mrwest808/skal/compare/v0.4.1...v0.4.2) (2019-09-16)
 
 ### [0.4.1](https://github.com/mrwest808/skal/compare/v0.4.0...v0.4.1) (2019-09-14)
