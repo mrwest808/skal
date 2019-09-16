@@ -1,23 +1,46 @@
+import os from 'os';
+import path from 'path';
 import Skal from './skal';
 import { errors } from './errors';
+import Paths from './paths';
+import PersistentStore from './persistent-store';
 import {
   CliRunnerAction as Action,
   CliRunnerEffects as Effects,
   CliRunnerOptions,
   Reporter,
 } from './types';
+import { __TEST__ } from './utils';
+
+const defaults = {
+  basePath: path.join(os.homedir(), '.skal'),
+};
 
 export default class CliRunner {
   public readonly action: Action;
 
+  private paths: Paths;
+  private userConfig: PersistentStore;
   private skal: Skal;
   private effects: Effects;
   private reporter: Reporter;
 
   constructor(opts: CliRunnerOptions) {
-    const skal = new Skal(opts.basePath);
+    const basePath = opts.basePath || defaults.basePath;
+    const paths = new Paths(basePath);
+    const internalOptionsStore = new PersistentStore(
+      PersistentStore.Type.InternalOptions,
+      __TEST__ ? basePath : undefined
+    );
+    const userConfigStore = new PersistentStore(
+      PersistentStore.Type.UserConfig,
+      __TEST__ ? basePath : undefined
+    );
+    const skal = new Skal(paths, internalOptionsStore, userConfigStore);
     const action = !skal.initialized ? Action.Initialize : opts.action;
 
+    this.paths = paths;
+    this.userConfig = userConfigStore;
     this.skal = skal;
     this.action = action;
     this.effects = opts.effects;
@@ -72,10 +95,7 @@ export default class CliRunner {
 
     const answers = await this.effects.prompt(questions);
     this.skal.initialize(answers.editor);
-    this.reporter.initializeDone(
-      this.skal.getPath(Skal.Path.Profiles),
-      this.skal.getPath(Skal.Path.Symlink)
-    );
+    this.reporter.initializeDone(this.paths.profiles, this.paths.symlink);
   }
 
   private listProfiles() {
@@ -90,15 +110,12 @@ export default class CliRunner {
 
   private whichProfile() {
     const activeProfile = this.skal.activeProfile;
-    const activeProfilePath = this.skal.getPath(
-      Skal.Path.Profiles,
-      activeProfile
-    );
+    const activeProfilePath = this.paths.profile(activeProfile);
     this.reporter.whichProfileDone(activeProfile, activeProfilePath);
   }
 
   private async edit() {
-    const configPath = this.skal.getPath(Skal.Path.Config);
+    const configPath = this.userConfig.getPath();
     const profiles = this.skal.listAvailableProfiles();
     const questions = [
       {
@@ -112,7 +129,7 @@ export default class CliRunner {
               profile === this.skal.activeProfile
                 ? `profiles/${profile} (active)`
                 : `profiles/${profile}`,
-            value: this.skal.getPath(Skal.Path.Profiles, profile),
+            value: this.paths.profile(profile),
           })),
         ],
       },
