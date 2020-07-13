@@ -58,7 +58,7 @@
     "jest": "^24.0.0",
     "jest-expect-message": "^1.0.2",
     "ncp": "^2.0.0",
-    "standard-version": "^7.0.0",
+    "standard-version": "^8.0.1",
     "typescript": "^3.3.1"
   },
   "resolutions": {
